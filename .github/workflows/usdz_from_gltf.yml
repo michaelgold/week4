@@ -1,0 +1,53 @@
+name: Generate USDZ from GLTF
+on: push
+
+jobs:
+  build:
+    name: Generate the USDZ Files
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "2.x" # Version range or exact version of a Python version to use, using SemVer's version range syntax
+          architecture: "x64" # optional x64 or x86. Defaults to x64 if not specified
+
+      - name: Install numpy
+        run: python -m pip install --user numpy
+      
+      - name: Install Pillow
+        run: python -m pip install --user Pillow
+
+      - name: Checkout usdzconvert repo
+        uses: actions/checkout@v2
+        with:
+          repository: michaelgold/usdzconvert
+          path: usdzconvert
+
+      - name: Download and extract USDZ binaries
+        run: |
+          cd usdzconvert
+          wget https://github.com/michaelgold/usdzconvert/releases/download/1.6.1/pxr_usd.tar.gz
+          tar -xvf pxr_usd.tar.gz --directory .
+          ls -lah .
+      
+      # - name: Setup upterm session
+      #   uses: lhotari/action-upterm@v1
+
+      - name: Convert files 
+        run: | 
+          cd usdzconvert
+          python convert_assets.py
+
+      - name: Commit changes to source
+        uses: EndBug/add-and-commit@v8
+        with:
+          add: 'source'
+
+      - name: Commit changes to dist
+        uses: EndBug/add-and-commit@v8
+        with:
+          add: 'dist'
